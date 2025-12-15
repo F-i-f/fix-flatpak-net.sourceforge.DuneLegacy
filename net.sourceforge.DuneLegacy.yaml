@@ -22,17 +22,41 @@ modules:
       - type: git
         url: https://github.com/libsdl-org/SDL_ttf.git
         tag: release-2.24.0-0-g2a891473eaf05ba1707a4b7913e6c4db7de7458a
-    cleanup:
-      - /include
-      - /lib/*.a
-      - /lib/*.la
-      - /lib/*.so
-      - /lib/cmake
-      - /lib/pkgconfig
-  - name: dunelegacy
-    buildsystem: autotools
+
+  - name: discord-rpc
+    buildsystem: cmake-ninja
     config-opts:
-      - CPPFLAGS=-I${FLATPAK_DEST}/include/SDL2
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    sources:
+      - type: git
+        url: https://github.com/discord/discord-rpc.git
+        tag: v3.4.0-0-ge6390c8c4190b59f1cc98bcec688e0037b84974d
+    modules:
+      - name: rapidjson
+        buildsystem: cmake
+        config-opts:
+          - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          - -DRAPIDJSON_BUILD_TESTS=no
+        sources:
+          - type: git
+            url: https://github.com/Tencent/rapidjson.git
+            tag: 24b5e7a8b27f42fa16b96fc70aade9106cf7102f
+        cleanup:
+          - /share/doc/RapidJSON
+
+  - name: miniupnp
+    subdir: miniupnpc
+    buildsystem: cmake-ninja
+    sources:
+      - type: git
+        url: https://github.com/miniupnp/miniupnp.git
+        tag: miniupnpd_2_3_9-0-gd66872e34d9ff83a07f8b71371b13419b2089953
+    cleanup:
+      - /bin/external-ip.sh
+      - /bin/upnp*
+
+  - name: dunelegacy
+    buildsystem: cmake-ninja
     post-install:
       - install -Dm 0644 dunelegacy.desktop ${FLATPAK_DEST}/share/applications/dunelegacy.desktop
       - install -Dm 0644 dunelegacy.appdata.xml ${FLATPAK_DEST}/share/appdata/dunelegacy.appdata.xml
@@ -40,17 +64,21 @@ modules:
     sources:
       - type: git
         url: https://git.code.sf.net/p/dunelegacy/code
-        tag: v0.96.4
-        commit: dede956fbd6f6f6bbee98a059c7edb677e67fc6d
+        commit: 0d4dd41abf053134552c6ec83fdfc208af4d3462
         x-checker-data:
           type: git
           tag-pattern": ^v([\\d.]+)$
       - type: patch
-        path: fix-build-with-SDL_mixer-2.0.2.patch
-      - type: patch
-        path: dunelegacy-0.96.4-c++-includes.patch
-      - type: shell
-        commands:
-          - autoreconf --install
+        path: dunelegacy-0.9.4-cmake.patch
       - type: file
         path: dunelegacy.appdata.xml
+
+cleanup:
+  - /include
+  - /lib/*.a
+  - /lib/*.la
+  - /lib/*.so
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /share/man
+  - /var
